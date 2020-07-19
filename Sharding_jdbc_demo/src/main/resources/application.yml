@@ -14,18 +14,28 @@ spring:
   shardingsphere:
     #数据源配置
     datasource:
-      names: m1
+      names: m1,m2
       m1:
         type: com.zaxxer.hikari.HikariDataSource
         driver-class-name: com.mysql.jdbc.Driver
         jdbc-url: jdbc:mysql://127.0.0.1:3306/order_db?useUnicode=true&characterEncoding=utf-8&useSSL=false
         username: root
         password: 1234
+      m2:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.jdbc.Driver
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/standata?useUnicode=true&characterEncoding=utf-8&useSSL=false
+        username: root
+        password: 1234
     #数据节点配置
     sharding:
+      default-database-strategy:   #数据库分片算法配置
+        inline:
+          sharding-column: user_id
+          algorithm-expression: m$->{user_id % 2 + 1}
       tables:
         t_order:
-          actual-data-nodes: m1.t_order_$->{1..2}    #能够路由的表的节点
+          actual-data-nodes: m$->{1..2}.t_order_$->{1..2}    #能够路由的表的节点
           #主键生成策略配置
           key-generator:
             column: order_id
@@ -35,12 +45,25 @@ spring:
             inline:
               sharding-column: order_id   #分片键
               algorithm-expression: t_order_$->{order_id % 2 + 1}  #分片算法
+        t_user:
+          actual-data-nodes: m$->{1..2}.t_user_$->{1..2}    #能够路由的表的节点
+            #主键生成策略配置
+          key-generator:
+            column: user_id
+            type: SNOWFLAKE
+          #表的分片策略
+          table-strategy:
+            inline:
+              sharding-column: user_id   #分片键
+              algorithm-expression: t_user_$->{user_id % 2 + 1}  #分片算法
+      #绑定表配置
+      binding-tables: t_order,t_user
     props:
       sql:
         show: true    #打开sql输出日志
 #mybatisPlus配置
 mybatis-plus:
-#  mapper-locations: classpath:mapperxml/*.xml
+  #  mapper-locations: classpath:mapperxml/*.xml
   type-aliases-package: com.luop.entity    #所有entity别名类所在包
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl    #打印日志到控制台

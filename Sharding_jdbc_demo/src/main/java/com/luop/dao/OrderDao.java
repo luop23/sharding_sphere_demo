@@ -36,4 +36,12 @@ public interface OrderDao {
             "</script>")
     List<Map<String, Object>> getByWhere(@Param("ids") List<Long> ids);
 
+    /**
+     * 根据用户查询订单数据
+     * @param userId
+     * @return
+     */
+    @Select("select o.order_id,o.price,o.status,u.user_id,u.user_name,u.user_email " +
+            "from t_order o left join t_user u on o.user_id=u.user_id where u.user_id=#{userId}")
+    List<Map<String,Object>> getOrderByUerId(@Param("userId") Long userId);
 }
