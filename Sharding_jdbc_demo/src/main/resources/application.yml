@@ -1,0 +1,50 @@
+spring:
+  datasource:
+    #hikari连接池配置
+    hikari:
+      #连接池最大连接数
+      maximum-pool-size: 10
+      #最小空闲连接数
+      minimum-idle: 5
+      #数据库连接超时时间，默认30s
+      connection-timeout: 30000
+      #自动提交从池中返回的链接
+      auto-commit: true
+  #sharding-jdbc分片规则配置
+  shardingsphere:
+    #数据源配置
+    datasource:
+      names: m1
+      m1:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.jdbc.Driver
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/order_db?useUnicode=true&characterEncoding=utf-8&useSSL=false
+        username: root
+        password: 1234
+    #数据节点配置
+    sharding:
+      tables:
+        t_order:
+          actual-data-nodes: m1.t_order_$->{1..2}    #能够路由的表的节点
+          #主键生成策略配置
+          key-generator:
+            column: order_id
+            type: SNOWFLAKE
+          #表的分片策略
+          table-strategy:
+            inline:
+              sharding-column: order_id   #分片键
+              algorithm-expression: t_order_$->{order_id % 2 + 1}  #分片算法
+    props:
+      sql:
+        show: true    #打开sql输出日志
+#mybatisPlus配置
+mybatis-plus:
+#  mapper-locations: classpath:mapperxml/*.xml
+  type-aliases-package: com.luop.entity    #所有entity别名类所在包
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl    #打印日志到控制台
+    map-underscore-to-camel-case: true    #开启驼峰命名
+
+
+
